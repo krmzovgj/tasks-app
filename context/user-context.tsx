@@ -31,6 +31,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    console.log(process.env.NEXT_PUBLIC_BACKEND_URL)
+
     useEffect(() => {
         const token = Cookies.get("token");
         const userId = Cookies.get("userId");
@@ -42,7 +44,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const fetchUser = async () => {
             try {
                 const res = await fetch(
-                    `https://tasks-server-iota.vercel.app/user/${userId}`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${userId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

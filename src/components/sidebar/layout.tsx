@@ -1,18 +1,20 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import Cookies from "js-cookie";
-import { useRouter } from "next/router"; // if you're on App Router, switch to next/navigation
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-    AddSquare,
+    ArchiveBox,
     ArrowDown2,
     Folder2,
     FolderOpen,
+    Home2,
     LogoutCurve,
 } from "iconsax-react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/router"; // if you're on App Router, switch to next/navigation
+import { ReactNode, useEffect, useState } from "react";
+import { useFolders } from "../../../context/folder-context";
 import { useUser } from "../../../context/user-context";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface Folder {
     id: number;
@@ -22,38 +24,19 @@ interface Folder {
 
 interface LayoutProps {
     children: ReactNode;
-    folders?: Folder[];
+    pageTitle?: string;
 }
 
-export default function Layout({ children }: LayoutProps) {
-    const { user } = useUser();
+export default function Layout({ children, pageTitle }: LayoutProps) {
+    const { user, loading } = useUser();
+    const { refreshFolders, folders } = useFolders();
+
     const router = useRouter();
-    const [foldersOpen, setFoldersOpen] = useState<boolean>(true);
+    const [foldersOpen, setFoldersOpen] = useState<boolean>(false);
     const prefersReducedMotion = useReducedMotion();
-    const token = Cookies.get("token");
-    const [folders, setfolders] = useState([]);
-
-    const fetchFolders = async () => {
-        try {
-            const response = await fetch(
-                `https://tasks-server-iota.vercel.app/folder`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (response.ok) {
-                const data = await response.json();
-                setfolders(data);
-            }
-        } catch (error) {}
-    };
 
     useEffect(() => {
-        fetchFolders();
+        refreshFolders();
     }, []);
 
     const containerVariants = {
@@ -110,121 +93,181 @@ export default function Layout({ children }: LayoutProps) {
     return (
         <div className="flex h-screen bg-gray-50">
             {/* Sidebar */}
-            <aside className="w-64 bg-background border-r py-4 flex flex-col justify-between">
+            <aside className="w-64 bg-background border-r pb-4 flex flex-col justify-between">
                 <div>
-                    <h1 className="text-lg font-semibold mb-6 px-4 flex items-center gap-x-2">
+                    <h1 className="text-lg border-b font-semibold h-19 px-4 flex items-center gap-x-2">
                         Productivity
                     </h1>
 
                     {/* Folders block */}
-                    <div className="px-4 mt-6">
-                        <motion.button
-                            whileTap={{
-                                scale: prefersReducedMotion ? 1 : 0.98,
-                            }}
-                            type="button"
-                            onClick={() => setFoldersOpen((o) => !o)}
-                            aria-expanded={foldersOpen}
-                            className="w-full cursor-pointer select-none rounded-md px-2 py-2 hover:bg-muted/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-muted-foreground/20 flex items-center justify-between"
-                        >
-                            <span className="flex cursor-pointer items-center gap-x-3 text-sm font-medium">
-                                {foldersOpen ? (
-                                    <FolderOpen
-                                        variant="Bulk"
-                                        size={24}
-                                        color="#000"
-                                    />
-                                ) : (
-                                    <Folder2
-                                        variant="Bulk"
-                                        size={24}
-                                        color="#000"
-                                    />
-                                )}
-                                Folders
-                            </span>
-                            <motion.span
-                                animate={{ rotate: foldersOpen ? 180 : 0 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 400,
-                                    damping: 22,
+                    <div className="px-4 overflow-y-auto mt-8">
+                        <h1 className="ml-2 mb-2 font-semibold text-foreground/70">
+                            Menu
+                        </h1>
+                        <div className="flex flex-col gap-y-2">
+                            <motion.button
+                                onClick={() => router.push("/")}
+                                whileTap={{
+                                    scale: prefersReducedMotion ? 1 : 0.98,
                                 }}
-                                className="inline-flex"
+                                type="button"
+                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 focus:outline-none  flex items-center gap-x-3"
                             >
-                                <ArrowDown2
+                                <Home2 variant="Bold" size={24} color="#000" />
+                                Dashboard
+                            </motion.button>
+
+                            <div>
+                                <motion.button
+                                    whileTap={{
+                                        scale: prefersReducedMotion ? 1 : 0.98,
+                                    }}
+                                    type="button"
+                                    onClick={() => setFoldersOpen((o) => !o)}
+                                    aria-expanded={foldersOpen}
+                                    className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 flex items-center justify-between"
+                                >
+                                    <span className="flex cursor-pointer items-center gap-x-3 text-sm font-medium">
+                                        {foldersOpen ? (
+                                            <FolderOpen
+                                                variant="Bulk"
+                                                size={24}
+                                                color="#000"
+                                            />
+                                        ) : (
+                                            <Folder2
+                                                variant="Bulk"
+                                                size={24}
+                                                color="#000"
+                                            />
+                                        )}
+                                        Folders
+                                    </span>
+                                    <motion.span
+                                        animate={{
+                                            rotate: foldersOpen ? 180 : 0,
+                                        }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 22,
+                                        }}
+                                        className="inline-flex"
+                                    >
+                                        <ArrowDown2
+                                            variant="Bold"
+                                            size={18}
+                                            color="#000"
+                                        />
+                                    </motion.span>
+                                </motion.button>
+
+                                {!loading && (
+                                    <AnimatePresence initial={false}>
+                                        {foldersOpen && (
+                                            <motion.div
+                                                key="folder-list"
+                                                role="region"
+                                                aria-label="Folder list"
+                                                initial="closed"
+                                                animate="open"
+                                                exit="closed"
+                                                variants={containerVariants}
+                                                className="ms-6 ps-3 mt-1 border-l-2 border-foreground/40   overflow-hidden"
+                                                style={undefined}
+                                            >
+                                                <motion.ul
+                                                    className="py-1  space-y-0.5"
+                                                    layout
+                                                >
+                                                    {folders.map(
+                                                        (f: Folder) => (
+                                                            <motion.li
+                                                                key={f?.id}
+                                                                variants={
+                                                                    itemVariants
+                                                                }
+                                                                layout
+                                                            >
+                                                                <motion.button
+                                                                    onClick={() =>
+                                                                        router.push(
+                                                                            `/folder/${f.id}`
+                                                                        )
+                                                                    }
+                                                                    type="button"
+                                                                    whileHover={{
+                                                                        x: prefersReducedMotion
+                                                                            ? 0
+                                                                            : 2,
+                                                                    }}
+                                                                    whileTap={{
+                                                                        scale: prefersReducedMotion
+                                                                            ? 1
+                                                                            : 0.98,
+                                                                    }}
+                                                                    className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-xl hover:bg-muted/50 flex items-center justify-between"
+                                                                    // onClick={() => router.push(`/folders/${f.id}`)}
+                                                                >
+                                                                    <div className="flex items-center gap-x-3">
+                                                                        <div
+                                                                            className="h-6 w-6 rounded-md flex justify-center items-center"
+                                                                            style={{
+                                                                                backgroundColor:
+                                                                                    f.color +
+                                                                                    "1A",
+                                                                            }}
+                                                                        >
+                                                                            <Folder2
+                                                                                variant="Bold"
+                                                                                size={
+                                                                                    16
+                                                                                }
+                                                                                color={
+                                                                                    f.color
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <span className="truncate">
+                                                                            {
+                                                                                f.name
+                                                                            }
+                                                                        </span>
+                                                                    </div>
+                                                                </motion.button>
+                                                            </motion.li>
+                                                        )
+                                                    )}
+                                                </motion.ul>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                )}
+                            </div>
+
+                            <motion.button
+                                onClick={() => router.push("/archive")}
+                                whileTap={{
+                                    scale: prefersReducedMotion ? 1 : 0.98,
+                                }}
+                                type="button"
+                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 focus:outline-none  flex items-center gap-x-3"
+                            >
+                                <ArchiveBox
                                     variant="Bold"
-                                    size={18}
+                                    size={24}
                                     color="#000"
                                 />
-                            </motion.span>
-                        </motion.button>
-
-                        {/* Collapsible content */}
-                        <AnimatePresence initial={false}>
-                            {foldersOpen && (
-                                <motion.div
-                                    key="folder-list"
-                                    role="region"
-                                    aria-label="Folder list"
-                                    initial="closed"
-                                    animate="open"
-                                    exit="closed"
-                                    variants={containerVariants}
-                                    className="ms-4 ps-4  mt-2 overflow-hidden"
-                                    style={undefined}
-                                >
-                                    <motion.ul
-                                        className="py-1 space-y-0.5"
-                                        layout
-                                    >
-                                        {folders.map((f: Folder) => (
-                                            <motion.li
-                                                key={f?.id}
-                                                variants={itemVariants}
-                                                layout
-                                            >
-                                                <motion.button
-                                                    type="button"
-                                                    whileHover={{
-                                                        x: prefersReducedMotion
-                                                            ? 0
-                                                            : 2,
-                                                    }}
-                                                    whileTap={{
-                                                        scale: prefersReducedMotion
-                                                            ? 1
-                                                            : 0.98,
-                                                    }}
-                                                    className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-md hover:bg-muted/50 flex items-center justify-between"
-                                                    // onClick={() => router.push(`/folders/${f.id}`)}
-                                                >
-                                                    <div className="flex items-center gap-x-3">
-                                                        <div className="h-6 w-6 rounded-md flex justify-center items-center bg-[#FF8C00]/10 ">
-                                                            <Folder2
-                                                                variant="Bold"
-                                                                size={16}
-                                                                color="#FF8C00"
-                                                            />
-                                                        </div>
-                                                        <span className="truncate">
-                                                            {f.name}
-                                                        </span>
-                                                    </div>
-                                                </motion.button>
-                                            </motion.li>
-                                        ))}
-                                    </motion.ul>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                Archive
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
 
                 <div className="px-4">
                     <Button
                         variant="secondary"
-                        className="w-full cursor-pointer mt-auto"
+                        className="w-full  cursor-pointer mt-auto"
                         onClick={handleLogout}
                     >
                         <LogoutCurve
@@ -240,24 +283,28 @@ export default function Layout({ children }: LayoutProps) {
             {/* Main area */}
             <div className="flex-1 flex flex-col">
                 {/* Header */}
-                <header className="pt-6 bg-background flex items-center justify-between px-8">
-                    <h2 className="text-lg font-medium">Dashboard</h2>
+                <header className="h-19 border-b bg-background flex items-center justify-between px-8">
+                    <h2 className="text-lg font-medium">{pageTitle}</h2>
 
-                    <div className="flex items-center gap-x-3">
-                        <div className="rounded-full flex justify-center font-bold items-center w-11 h-11 bg-[#FF8C00]/10 text-[#FF8C00]">
-                            {initials}
+                    {user ? (
+                        <div className="flex items-center gap-x-3">
+                            <div className="rounded-full flex justify-center font-bold text-[15px] items-center w-10 h-10 bg-[#FF8C00]/10 text-[#FF8C00]">
+                                {initials}
+                            </div>
+                            <div>
+                                <h3 className="text-md font-medium">
+                                    {user?.username}
+                                </h3>
+                                <h4 className="text-xs font-medium text-foreground/80 -mt-0.5">
+                                    {user?.email}
+                                </h4>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-medium">{user?.username}</h3>
-                            <h4 className="text-sm font-medium text-foreground/80 -mt-0.5">
-                                {user?.email}
-                            </h4>
-                        </div>
-                    </div>
+                    ) : null}
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 overflow-y-auto px-8 bg-background">
+                <main className="flex-1 overflow-y-auto px-8 py-8 bg-background">
                     {children}
                 </main>
             </div>

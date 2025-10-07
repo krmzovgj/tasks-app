@@ -12,7 +12,7 @@ export default function SignIn() {
         e.preventDefault();
 
         const res = await fetch(
-            "https://tasks-server-iota.vercel.app/auth/register",
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/register`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
