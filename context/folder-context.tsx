@@ -8,7 +8,7 @@ import {
     ReactNode,
 } from "react";
 import Cookies from "js-cookie";
-import { Folder } from "@/models";
+import { Folder } from "@/styles/models";
 
 interface FolderContextType {
     folders: Folder[];

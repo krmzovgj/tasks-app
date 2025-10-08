@@ -126,7 +126,7 @@ export default function Home() {
                             </Empty>
                         </div>
                     ) : (
-                        <div className="h-full border">
+                        <div className="h-full">
                             <Dialog>
                                 <DialogTrigger>Open</DialogTrigger>
                                 <DialogContent>

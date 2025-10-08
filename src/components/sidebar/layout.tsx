@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
     ArchiveBox,
+    Arrow,
     ArrowDown2,
     Folder2,
     FolderOpen,
@@ -91,12 +92,14 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         .toUpperCase();
 
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex h-screen ">
             {/* Sidebar */}
             <aside className="w-64 bg-background border-r pb-4 flex flex-col justify-between">
                 <div>
                     <h1 className="text-lg border-b font-semibold h-19 px-4 flex items-center gap-x-2">
-                        Productivity
+                        <div className="w-7 h-7 rounded-md bg-foreground relative overflow-hidden">
+                        <Arrow variant="Bold" className="rotate-45 absolute left-0 bottom-0" size={20} color="#fff" />
+                            </div>Productivity
                     </h1>
 
                     {/* Folders block */}
@@ -111,7 +114,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                     scale: prefersReducedMotion ? 1 : 0.98,
                                 }}
                                 type="button"
-                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 focus:outline-none  flex items-center gap-x-3"
+                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/80 focus:outline-none  flex items-center gap-x-3"
                             >
                                 <Home2 variant="Bold" size={24} color="#000" />
                                 Dashboard
@@ -125,7 +128,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                     type="button"
                                     onClick={() => setFoldersOpen((o) => !o)}
                                     aria-expanded={foldersOpen}
-                                    className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 flex items-center justify-between"
+                                    className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/80 flex items-center justify-between"
                                 >
                                     <span className="flex cursor-pointer items-center gap-x-3 text-sm font-medium">
                                         {foldersOpen ? (
@@ -206,7 +209,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                                                             ? 1
                                                                             : 0.98,
                                                                     }}
-                                                                    className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-xl hover:bg-muted/50 flex items-center justify-between"
+                                                                    className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-xl hover:bg-muted/50  flex items-center justify-between"
                                                                     // onClick={() => router.push(`/folders/${f.id}`)}
                                                                 >
                                                                     <div className="flex items-center gap-x-3">
@@ -251,7 +254,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                     scale: prefersReducedMotion ? 1 : 0.98,
                                 }}
                                 type="button"
-                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/60 bg-muted/80 focus:outline-none  flex items-center gap-x-3"
+                                className="w-full cursor-pointer select-none rounded-xl px-3 py-3 hover:bg-muted/80 focus:outline-none  flex items-center gap-x-3"
                             >
                                 <ArchiveBox
                                     variant="Bold"
@@ -288,7 +291,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
 
                     {user ? (
                         <div className="flex items-center gap-x-3">
-                            <div className="rounded-full flex justify-center font-bold text-[15px] items-center w-10 h-10 bg-[#FF8C00]/10 text-[#FF8C00]">
+                            <div className="rounded-full flex justify-center font-bold text-[15px] items-center w-10 h-10 bg-foreground/10 text-foreground">
                                 {initials}
                             </div>
                             <div>
@@ -304,7 +307,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 overflow-y-auto px-8 py-8 bg-background">
+                <main className="flex-1 overflow-y-auto  bg-background">
                     {children}
                 </main>
             </div>

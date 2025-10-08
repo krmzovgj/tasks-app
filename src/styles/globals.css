@@ -3,9 +3,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+::selection {
+    background-color: black !important;
+    color: white !important;
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
+    --high: #E93930;
+    --medium: #EDA224;
+    --low: #9b50d7;
+    --pending: oklch(0.145 0 0);
+    --in_progress: #4e46e3;
+    --done: #13a473;
     --radius: 0.625rem;
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -41,6 +52,13 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
+    --color-low: var(--low);
+    --color-medium: var(--medium);
+    --color-high: var(--high);
+
+    --color-pending: var(--pending);
+    --color-in-progress: var(--in_progress); /* use hyphen in the token name */
+    --color-done: var(--done);
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
     --color-sidebar-ring: var(--sidebar-ring);

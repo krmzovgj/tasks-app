@@ -7,7 +7,6 @@ import Layout from "@/components/sidebar/layout";
 export default function App({ Component, pageProps, router }: AppProps) {
     const noLayout = router.pathname.startsWith("/auth");
 
-
     return (
         <UserProvider>
             <FolderProvider>
