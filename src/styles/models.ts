@@ -11,6 +11,7 @@ export interface Task {
     status: Status;
     priority: Priority;
     createdAt: string;
+    archived: boolean;
     folderId: number;
 }
 
@@ -19,6 +20,7 @@ export interface Folder {
     name: string;
     color: string;
     tasks: Task[]
+    createdAt: string;
 }
 
 

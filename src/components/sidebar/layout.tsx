@@ -1,12 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { createFolder as createFolderUtil } from "@/lib/crud";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
+    Add,
     ArchiveBox,
     Arrow,
     ArrowDown2,
     Folder2,
+    FolderAdd,
     FolderOpen,
     Home2,
     LogoutCurve,
@@ -16,6 +19,17 @@ import { useRouter } from "next/router"; // if you're on App Router, switch to n
 import { ReactNode, useEffect, useState } from "react";
 import { useFolders } from "../../../context/folder-context";
 import { useUser } from "../../../context/user-context";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "../ui/dialog";
+import Input from "../ui/input";
+import { Separator } from "../ui/separator";
 
 interface Folder {
     id: number;
@@ -30,15 +44,47 @@ interface LayoutProps {
 
 export default function Layout({ children, pageTitle }: LayoutProps) {
     const { user, loading } = useUser();
+    const token = Cookies.get("token");
+    const router = useRouter();
+
+    const [folderName, setFolderName] = useState("");
+    const [folderColor, setFolderColor] = useState<string | null>(null);
+
     const { refreshFolders, folders } = useFolders();
 
-    const router = useRouter();
     const [foldersOpen, setFoldersOpen] = useState<boolean>(false);
     const prefersReducedMotion = useReducedMotion();
+    const [folderDialog, setfolderDialog] = useState(false);
+
+    const colors = [
+        "#FF8C00",
+        "#FF6B6B",
+        "#6BCB77",
+        "#4D96FF",
+        "#9B5DE5",
+        "#FF63C3",
+        "#20C997",
+        "#292929",
+    ];
 
     useEffect(() => {
-        refreshFolders();
+        if (user?.id) {
+            refreshFolders();
+        }
     }, []);
+
+    const handleCreateFolder = async () => {
+        if (!user || !folderName) return;
+        await createFolderUtil(token!, {
+            name: folderName,
+            color: folderColor ? folderColor : "#FF8C00",
+            userId: user.id,
+        });
+        refreshFolders();
+        setfolderDialog(false);
+        setFolderName("");
+        setFolderColor(null);
+    };
 
     const containerVariants = {
         open: {
@@ -92,22 +138,91 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         .toUpperCase();
 
     return (
-        <div className="flex h-screen ">
+        <div className="flex h-screen overflow-y-hidden">
             {/* Sidebar */}
             <aside className="w-64 bg-background border-r pb-4 flex flex-col justify-between">
-                <div>
+                <div className="overflow-y-auto custom-scrollbar">
                     <h1 className="text-lg border-b font-semibold h-19 px-4 flex items-center gap-x-2">
                         <div className="w-7 h-7 rounded-md bg-foreground relative overflow-hidden">
-                        <Arrow variant="Bold" className="rotate-45 absolute left-0 bottom-0" size={20} color="#fff" />
-                            </div>Productivity
+                            <Arrow
+                                variant="Bold"
+                                className="rotate-45 absolute left-0 bottom-0"
+                                size={20}
+                                color="#fff"
+                            />
+                        </div>
+                        Productivity
                     </h1>
 
                     {/* Folders block */}
-                    <div className="px-4 overflow-y-auto mt-8">
-                        <h1 className="ml-2 mb-2 font-semibold text-foreground/70">
+                    <div className="px-4 pt-8">
+                        <Dialog
+                            open={folderDialog}
+                            onOpenChange={setfolderDialog}
+                        >
+                            <DialogTrigger asChild>
+                                <Button className="w-full" variant="default">
+                                    <FolderAdd
+                                        variant="Bold"
+                                        size={20}
+                                        color="#fff"
+                                    />
+                                    Create Folder
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Create Folder</DialogTitle>
+                                    <DialogDescription>
+                                        Fill the provided inputs to create a
+                                        folder.
+                                    </DialogDescription>
+                                    <Input
+                                        onChange={(e) =>
+                                            setFolderName(e.target.value)
+                                        }
+                                        label="Folder Name"
+                                        placeholder="eg. Work"
+                                    />
+                                    <div className="space-y-2 mt-4">
+                                        <label className="mb-1 font-medium text-foeground/80">
+                                            Folder Color
+                                        </label>
+                                        <div className="flex gap-3 mt-1 flex-wrap">
+                                            {colors.map((color) => (
+                                                <button
+                                                    key={color}
+                                                    onClick={() =>
+                                                        setFolderColor(color)
+                                                    }
+                                                    className={`h-8 w-8 cursor-pointer rounded-lg border-2 transition-all ${
+                                                        folderColor === color
+                                                            ? "border-black scale-110"
+                                                            : "border-transparent"
+                                                    }`}
+                                                    style={{
+                                                        backgroundColor: color,
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <Button
+                                        onClick={handleCreateFolder}
+                                        variant="default"
+                                    >
+                                        Create Folder
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+
+                        <h1 className="ml-2 mt-6 mb-1 font-semibold text-foreground/70">
                             Menu
                         </h1>
-                        <div className="flex flex-col gap-y-2">
+                        <div className="flex flex-col gap-y-1">
                             <motion.button
                                 onClick={() => router.push("/")}
                                 whileTap={{
@@ -176,72 +291,85 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                                 animate="open"
                                                 exit="closed"
                                                 variants={containerVariants}
-                                                className="ms-6 ps-3 mt-1 border-l-2 border-foreground/40   overflow-hidden"
+                                                className={` ${
+                                                    folders.length !== 0
+                                                        ? "border-l-2 ms-6 ps-3 mt-1  border-foreground/40"
+                                                        : "border-none mt-1 justify-center flex"
+                                                }   overflow-hidden`}
                                                 style={undefined}
                                             >
-                                                <motion.ul
-                                                    className="py-1  space-y-0.5"
-                                                    layout
-                                                >
-                                                    {folders.map(
-                                                        (f: Folder) => (
-                                                            <motion.li
-                                                                key={f?.id}
-                                                                variants={
-                                                                    itemVariants
-                                                                }
-                                                                layout
-                                                            >
-                                                                <motion.button
-                                                                    onClick={() =>
-                                                                        router.push(
-                                                                            `/folder/${f.id}`
-                                                                        )
+                                                {folders.length !== 0 ? (
+                                                    <motion.ul
+                                                        className="py-1 space-y-0.5"
+                                                        layout
+                                                    >
+                                                        {folders.map(
+                                                            (f: Folder) => (
+                                                                <motion.li
+                                                                    key={f?.id}
+                                                                    variants={
+                                                                        itemVariants
                                                                     }
-                                                                    type="button"
-                                                                    whileHover={{
-                                                                        x: prefersReducedMotion
-                                                                            ? 0
-                                                                            : 2,
-                                                                    }}
-                                                                    whileTap={{
-                                                                        scale: prefersReducedMotion
-                                                                            ? 1
-                                                                            : 0.98,
-                                                                    }}
-                                                                    className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-xl hover:bg-muted/50  flex items-center justify-between"
-                                                                    // onClick={() => router.push(`/folders/${f.id}`)}
+                                                                    layout
                                                                 >
-                                                                    <div className="flex items-center gap-x-3">
-                                                                        <div
-                                                                            className="h-6 w-6 rounded-md flex justify-center items-center"
-                                                                            style={{
-                                                                                backgroundColor:
-                                                                                    f.color +
-                                                                                    "1A",
-                                                                            }}
-                                                                        >
-                                                                            <Folder2
-                                                                                variant="Bold"
-                                                                                size={
-                                                                                    16
+                                                                    <motion.button
+                                                                        onClick={() =>
+                                                                            router.push(
+                                                                                `/folder/${f.id}`
+                                                                            )
+                                                                        }
+                                                                        type="button"
+                                                                        whileHover={{
+                                                                            x: prefersReducedMotion
+                                                                                ? 0
+                                                                                : 2,
+                                                                        }}
+                                                                        whileTap={{
+                                                                            scale: prefersReducedMotion
+                                                                                ? 1
+                                                                                : 0.98,
+                                                                        }}
+                                                                        className="w-full cursor-pointer text-left text-sm px-2 py-1.5 rounded-xl hover:bg-muted/50  flex items-center justify-between"
+                                                                        // onClick={() => router.push(`/folders/${f.id}`)}
+                                                                    >
+                                                                        <div className="flex items-center gap-x-3">
+                                                                            <div
+                                                                                className="h-6 w-6 rounded-md flex justify-center items-center"
+                                                                                style={{
+                                                                                    backgroundColor:
+                                                                                        f.color +
+                                                                                        "1A",
+                                                                                }}
+                                                                            >
+                                                                                <Folder2
+                                                                                    variant="Bold"
+                                                                                    size={
+                                                                                        16
+                                                                                    }
+                                                                                    color={
+                                                                                        f.color
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                            <span className="truncate">
+                                                                                {
+                                                                                    f.name
                                                                                 }
-                                                                                color={
-                                                                                    f.color
-                                                                                }
-                                                                            />
+                                                                            </span>
                                                                         </div>
-                                                                        <span className="truncate">
-                                                                            {
-                                                                                f.name
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-                                                                </motion.button>
-                                                            </motion.li>
-                                                        )
-                                                    )}
-                                                </motion.ul>
+                                                                    </motion.button>
+                                                                </motion.li>
+                                                            )
+                                                        )}
+                                                    </motion.ul>
+                                                ) : (
+                                                    <motion.div
+                                                        className=" text-sm mt-1 mb-1 w-fit self-center font-medium text-foreground/60 flex items-center justify-between"
+                                                        variants={itemVariants}
+                                                    >
+                                                        No Folders Yet
+                                                    </motion.div>
+                                                )}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
@@ -266,21 +394,6 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                         </div>
                     </div>
                 </div>
-
-                <div className="px-4">
-                    <Button
-                        variant="secondary"
-                        className="w-full  cursor-pointer mt-auto"
-                        onClick={handleLogout}
-                    >
-                        <LogoutCurve
-                            variant="Linear"
-                            size={18}
-                            color="#fb2c36"
-                        />{" "}
-                        Logout
-                    </Button>
-                </div>
             </aside>
 
             {/* Main area */}
@@ -291,16 +404,33 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
 
                     {user ? (
                         <div className="flex items-center gap-x-3">
-                            <div className="rounded-full flex justify-center font-bold text-[15px] items-center w-10 h-10 bg-foreground/10 text-foreground">
-                                {initials}
-                            </div>
-                            <div>
-                                <h3 className="text-md font-medium">
-                                    {user?.username}
-                                </h3>
-                                <h4 className="text-xs font-medium text-foreground/80 -mt-0.5">
-                                    {user?.email}
-                                </h4>
+                            <div className="flex items-center gap-x-4">
+                                <div className="rounded-full flex justify-center font-bold text-[15px] items-center w-10 h-10 bg-foreground/10 text-foreground">
+                                    {initials}
+                                </div>
+                                <div>
+                                    <h3 className="text-md font-medium">
+                                        {user?.username}
+                                    </h3>
+                                    <h4 className="text-xs font-medium text-foreground/80 -mt-0.5">
+                                        {user?.email}
+                                    </h4>
+                                </div>
+
+                                <div className="h-6 mx-3 w-[1px] bg-foreground/10"></div>
+
+                                <Button
+                                    variant="secondary"
+                                    className="w-fit"
+                                    onClick={handleLogout}
+                                >
+                                    <LogoutCurve
+                                        color="red"
+                                        variant="Bulk"
+                                        size={18}
+                                    />
+                                    Sign Out
+                                </Button>
                             </div>
                         </div>
                     ) : null}
