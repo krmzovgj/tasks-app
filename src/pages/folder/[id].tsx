@@ -62,8 +62,19 @@ import {
     createTask as createTaskUtil,
     editTask as editTaskUtil,
     deleteTask as deleteTaskUtil,
+    deleteFolder,
 } from "@/lib/crud";
 import { formatDate, getPriority, getStatus } from "@/lib/utils";
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogAction,
+    AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const Folder = () => {
     const router = useRouter();
@@ -75,6 +86,7 @@ const Folder = () => {
     const token = Cookies.get("token");
 
     const folder = folders.find((f) => String(f?.id) === String(id));
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
@@ -319,41 +331,83 @@ const Folder = () => {
                             </SelectContent>
                         </Select>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-fit p-2">
-                                    <Setting2
-                                        variant="Linear"
-                                        size={20}
-                                        color="#000"
-                                    />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                // onClick={() => openEditTask(task)}
-                                >
-                                    <Edit
-                                        variant="Bulk"
-                                        size={17}
-                                        color="#000"
-                                    />{" "}
-                                    Edit Folder
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    className="text-red-500"
-                                    // onClick={() => deleteTask(task)}
-                                >
-                                    <Trash
-                                        variant="Bulk"
-                                        size={17}
-                                        color="#000"
-                                    />{" "}
-                                    Delete Folder
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <AlertDialog
+                            open={deleteDialogOpen}
+                            onOpenChange={setDeleteDialogOpen}
+                        >
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-fit p-2"
+                                    >
+                                        <Setting2
+                                            variant="Linear"
+                                            size={20}
+                                            color="#000"
+                                        />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                    // onClick={() => openEditTask(task)}
+                                    >
+                                        <Edit
+                                            variant="Bulk"
+                                            size={17}
+                                            color="#000"
+                                        />{" "}
+                                        Edit Folder
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+
+                                    <DropdownMenuItem
+                                        className="text-red-500"
+                                        onClick={() =>
+                                            setDeleteDialogOpen(true)
+                                        }
+                                    >
+                                        <Trash
+                                            variant="Bulk"
+                                            size={17}
+                                            color="#000"
+                                        />{" "}
+                                        Delete Folder
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will permanently delete the folder
+                                        and all its tasks.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="flex justify-end gap-2 mt-4">
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                        onClick={async () => {
+                                            await router.push("/");
+                                            await deleteFolder(
+                                                token!,
+                                                id!,
+                                                user?.id!
+                                            );
+                                            refreshFolders();
+                                        }}
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </div>
+                            </AlertDialogContent>
+                        </AlertDialog>
 
                         {(filterPriority !== "ALL" ||
                             filterStatus !== "ALL") && (

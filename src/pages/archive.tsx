@@ -2,7 +2,7 @@ import React from 'react'
 
 const Archive = () => {
   return (
-    <div>Archive</div>
+    <div className='p-8'>Archive Page Comming Soon</div>
   )
 }
 

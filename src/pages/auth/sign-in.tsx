@@ -1,5 +1,6 @@
 import Input from "@/components/ui/input";
-import { Folder2, FolderOpen } from "iconsax-react";
+import { Spinner } from "@/components/ui/spinner";
+import { Arrow, Folder2, FolderOpen } from "iconsax-react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -8,44 +9,58 @@ export default function Register() {
     const router = useRouter();
     const [email, setEmail] = useState<string>();
     const [password, setPassword] = useState<string>();
+    const [loading, setloading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
+        try {
+            setloading(true);
 
-        const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
+            e.preventDefault();
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                    }),
+                }
+            );
+
+            const data = await res.json();
+
+            if (res.ok) {
+                Cookies.set("token", data.token, { expires: 7, path: "/" });
+                Cookies.set("userId", data.user.id, {
+                    expires: 7,
+                    path: "/",
+                });
+                router.push("/");
+            } else {
+                alert(data.message || "Sign in failed");
             }
-        );
-
-        const data = await res.json();
-
-        if (res.ok) {
-            Cookies.set("token", data.token, { expires: 7, path: "/" });
-            Cookies.set("userId", data.user.id, {
-                expires: 7,
-                path: "/",
-            });
-            router.push("/");
-        } else {
-            alert(data.message || "Sign in failed");
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setloading(false);
         }
     };
 
     return (
         <div className="w-screen mx-auto h-screen p-8  justify-between flex items-center ">
-            <div className="md:w-1/2 h-full relative flex justify-center  md:mr-8">
-                <div className="absolute left-0 top-0  h-fit">
-                    <Folder2 variant="Bulk" size={50} color="#FF8C00" />
+            <div className="md:w-full h-full relative flex justify-center  ">
+                <div className="w-12 h-12 rounded-xl bg-foreground absolute left-0 top-o overflow-hidden">
+                    <Arrow
+                        variant="Bold"
+                        className="rotate-45 absolute left-0 bottom-0"
+                        size={34}
+                        color="#fff"
+                    />
                 </div>
 
-                <form className=" md:w-2/3 self-center " onSubmit={handleLogin}>
+                <form className=" md:w-1/3 self-center" onSubmit={handleLogin}>
                     <div className="mb-10">
                         <h1 className="font-medium text-5xl">Get Started</h1>
                         <h3 className="text-sm font-medium mt-2 ml-1">
@@ -68,10 +83,10 @@ export default function Register() {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     <button
-                        className="mt-4  cursor-pointer hover:bg-foreground/90 transition-all px-4 py-3 rounded-2xl bg-foreground w-full text-background"
+                        className="mt-4  cursor-pointer justify-center items-center flex  hover:bg-foreground/90 transition-all px-4 py-3 rounded-2xl bg-foreground w-full text-background"
                         type="submit"
                     >
-                        Sign In
+                        {loading ? <Spinner /> : "Sign In"}
                     </button>
 
                     <div className="mt-6">
@@ -86,18 +101,6 @@ export default function Register() {
                         </h2>
                     </div>
                 </form>
-            </div>
-
-            <div className="w-1/2 rounded-4xl border bg-foreground flex-col h-full flex justify-center items-center">
-                <FolderOpen
-                    variant="Bulk"
-                    size={120}
-                    className="rotate-20"
-                    color="#FF8C00"
-                />
-                <h1 className="mt-10 text-6xl text-background  text-center">
-                    The simplest way to manage your work
-                </h1>
             </div>
         </div>
     );

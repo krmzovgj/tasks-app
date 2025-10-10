@@ -18,7 +18,7 @@ export const fetchTasks = async (
             userId: String(userId),
             ...(folderId !== undefined ? { folderId: String(folderId) } : {}),
             ...(archived !== undefined ? { archived: String(archived) } : {}),
-        }); 
+        });
 
         const response = await fetch(`${BASE_URL}/task?${query.toString()}`, {
             headers: {
@@ -73,7 +73,7 @@ export const editTask = async (
         status: Status;
         archived: boolean;
         folderId: number | null;
-        userId: number,
+        userId: number;
     }>
 ): Promise<Task> => {
     try {
@@ -144,4 +144,28 @@ export const createFolder = async (
         console.error("createFolder error:", error);
         throw error;
     }
+};
+
+export const deleteFolder = async (
+    token: string,
+    folderId: string,
+    userId: number
+) => {
+    try {
+        const response = await fetch(
+            `${BASE_URL}/folder/${folderId}?userId=${userId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!response.ok) throw new Error("Failed to delete folder");
+        return true;
+    } catch (error) {
+        console.error("deleteFolder error:", error);
+        throw error;
+    } 
 };
